@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import ch.zhaw.freelancer4u.model.Company;
 import ch.zhaw.freelancer4u.model.CompanyCreateDTO;
 import ch.zhaw.freelancer4u.repository.CompanyRepository;
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api")
