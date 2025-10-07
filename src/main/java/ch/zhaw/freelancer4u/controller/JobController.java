@@ -36,18 +36,28 @@ public class JobController {
     }
 
     @GetMapping("/job")
-    public ResponseEntity<List<Job>> getAllJobs() {
-        List<Job> jobs = jobRepository.findAll();
-        return ResponseEntity.ok(jobs);
+    public ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) Double min,
+            @RequestParam(required = false) String type) {
+        List<Job> jobs;
+        if (min != null && type != null) {
+            jobs = jobRepository.findByEarningsGreaterThanAndJobType(min, type);
+        } else if (min != null) {
+            jobs = jobRepository.findByEarningsGreaterThan(min);
+        } else if (type != null) {
+            jobs = jobRepository.findByJobType(type);
+        } else {
+            jobs = jobRepository.findAll();
+        }
+        return new ResponseEntity<>(jobs, HttpStatus.OK);
     }
 
-@GetMapping("/job/{id}")
-public ResponseEntity<Job> getJobById(@PathVariable String id) {
-    Optional<Job> result = jobRepository.findById(id);
-    if (result.isPresent()) {
-        return new ResponseEntity<>(result.get(), HttpStatus.OK);
-    } else {
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @GetMapping("/job/{id}")
+    public ResponseEntity<Job> getJobById(@PathVariable String id) {
+        Optional<Job> result = jobRepository.findById(id);
+        if (result.isPresent()) {
+            return new ResponseEntity<>(result.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
-}
 }
