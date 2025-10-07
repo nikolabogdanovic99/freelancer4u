@@ -10,6 +10,7 @@ import ch.zhaw.freelancer4u.model.JobCreateDTO;
 import ch.zhaw.freelancer4u.repository.JobRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -39,4 +40,14 @@ public class JobController {
         List<Job> jobs = jobRepository.findAll();
         return ResponseEntity.ok(jobs);
     }
+
+@GetMapping("/job/{id}")
+public ResponseEntity<Job> getJobById(@PathVariable String id) {
+    Optional<Job> result = jobRepository.findById(id);
+    if (result.isPresent()) {
+        return new ResponseEntity<>(result.get(), HttpStatus.OK);
+    } else {
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+}
 }
