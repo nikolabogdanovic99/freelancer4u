@@ -7,9 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobStateChangeDTO;
+import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.service.JobService;
+import ch.zhaw.freelancer4u.model.JobStateAggregationDTO;
 
 import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/service")
@@ -17,6 +20,10 @@ public class JobServiceController {
 
     @Autowired
     private JobService jobService;
+
+    @Autowired
+    private JobRepository jobRepository;
+
 
     @PutMapping("/assignjob")
     public ResponseEntity<Job> assignJob(@RequestBody JobStateChangeDTO change) {
@@ -41,4 +48,10 @@ public class JobServiceController {
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
+
+    @GetMapping("/jobdashboard")
+    public List<JobStateAggregationDTO> getJobStateAggregation(@RequestParam String company) {
+    return jobRepository.getJobStateAggregation(company);
+}
+
 }
