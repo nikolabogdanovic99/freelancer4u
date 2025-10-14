@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobCreateDTO;
 import ch.zhaw.freelancer4u.repository.JobRepository;
+import ch.zhaw.freelancer4u.service.CompanyService;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,9 +20,16 @@ public class JobController {
     @Autowired
     private JobRepository jobRepository;
 
+    @Autowired
+    private CompanyService companyService;
+
     @PostMapping("/job")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO dto) {
         try {
+            if (dto.getCompanyId() == null || !companyService.companyExists(dto.getCompanyId())) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
             Job job = new Job(
                     dto.getTitle(),
                     dto.getDescription(),
@@ -30,6 +38,7 @@ public class JobController {
                     dto.getCompanyId());
             Job saved = jobRepository.save(job);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
+
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
