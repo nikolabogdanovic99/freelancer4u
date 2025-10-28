@@ -9,6 +9,7 @@ import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobCreateDTO;
 import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.service.CompanyService;
+import ch.zhaw.freelancer4u.service.UserService;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,30 +24,36 @@ public class JobController {
     @Autowired
     private CompanyService companyService;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping("/job")
-    public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO dto) {
-        try {
-            if (dto.getCompanyId() == null || !companyService.companyExists(dto.getCompanyId())) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
+    public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO cDTO) {
 
-            Job job = new Job(
-                    dto.getTitle(),
-                    dto.getDescription(),
-                    dto.getJobType(),
-                    dto.getEarnings(),
-                    dto.getCompanyId());
-            Job saved = jobRepository.save(job);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        // nur Admin darf erstellen
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
+
+        if (!companyService.companyExists(cDTO.getCompanyId())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Job jDAO = new Job(
+                cDTO.getDescription(),
+                cDTO.getJobType(),
+                cDTO.getEarnings(),
+                cDTO.getCompanyId()
+        );
+        Job j = jobRepository.save(jDAO);
+        return new ResponseEntity<>(j, HttpStatus.CREATED);
     }
 
     @GetMapping("/job")
-    public ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) Double min,
-            @RequestParam(required = false) String type) {
+    public ResponseEntity<List<Job>> getAllJobs(
+            @RequestParam(required = false) Double min,
+            @RequestParam(required = false) String type
+    ) {
         List<Job> jobs;
         if (min != null && type != null) {
             jobs = jobRepository.findByEarningsGreaterThanAndJobType(min, type);
@@ -63,10 +70,7 @@ public class JobController {
     @GetMapping("/job/{id}")
     public ResponseEntity<Job> getJobById(@PathVariable String id) {
         Optional<Job> result = jobRepository.findById(id);
-        if (result.isPresent()) {
-            return new ResponseEntity<>(result.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return result.map(job -> new ResponseEntity<>(job, HttpStatus.OK))
+                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

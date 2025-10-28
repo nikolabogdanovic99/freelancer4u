@@ -1,6 +1,8 @@
 <script>
   import favicon from "$lib/assets/favicon.svg";
   import "./styles.css";
+
+  // Daten kommen aus +layout.server.js
   let { data, children } = $props();
   let { user, isAuthenticated } = data;
 </script>
@@ -12,6 +14,7 @@
 <nav class="navbar navbar-expand-lg bg-light">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">Freelancer4U</a>
+
     <button
       class="navbar-toggler"
       type="button"
@@ -23,16 +26,19 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        {#if isAuthenticated}
+        {#if isAuthenticated && user && user.user_roles && user.user_roles.includes("admin")}
           <li class="nav-item">
             <a class="nav-link" href="/companies">Companies</a>
           </li>
+        {/if}
+
+        {#if isAuthenticated}
           <li class="nav-item">
             <a class="nav-link" href="/jobs">Jobs</a>
           </li>
-          <!-- 👉 Neuer Eintrag für Account -->
           <li class="nav-item">
             <a class="nav-link" href="/account">Account</a>
           </li>
@@ -41,7 +47,7 @@
 
       <div class="d-flex">
         {#if isAuthenticated}
-          <span class="navbar-text me-2">{user.name}</span>
+          <span class="navbar-text me-2">{user?.name}</span>
           <form method="POST" action="/logout" style="display: inline;">
             <button type="submit" class="btn btn-primary">Log Out</button>
           </form>

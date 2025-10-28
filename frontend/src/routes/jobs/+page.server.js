@@ -4,30 +4,34 @@ import "dotenv/config";
 
 const API_BASE_URL = process.env.API_BASE_URL;
 
-// JWT beim Laden mitschicken
 export async function load({ locals }) {
   const jwt_token = locals.jwt_token;
+  const user_info = locals.user;
+
   if (!jwt_token) {
     return { jobs: [], companies: [] };
   }
 
   try {
-    const [jobsResponse, companiesResponse] = await Promise.all([
-      axios({
-        method: "get",
-        url: `${API_BASE_URL}/api/job`,
-        headers: { Authorization: "Bearer " + jwt_token }
-      }),
-      axios({
+    const jobsResponse = await axios({
+      method: "get",
+      url: `${API_BASE_URL}/api/job`,
+      headers: { Authorization: "Bearer " + jwt_token }
+    });
+
+    let companies = [];
+    if (user_info?.user_roles?.includes("admin")) {
+      const companiesResponse = await axios({
         method: "get",
         url: `${API_BASE_URL}/api/company`,
         headers: { Authorization: "Bearer " + jwt_token }
-      })
-    ]);
+      });
+      companies = companiesResponse.data;
+    }
 
     return {
       jobs: jobsResponse.data,
-      companies: companiesResponse.data
+      companies
     };
   } catch (axiosError) {
     console.log("Error loading jobs/companies:", axiosError);
@@ -36,7 +40,6 @@ export async function load({ locals }) {
 }
 
 export const actions = {
-  // JWT beim Erstellen mitschicken
   createJob: async ({ request, locals }) => {
     const jwt_token = locals.jwt_token;
     if (!jwt_token) throw error(401, "Authentication required");
