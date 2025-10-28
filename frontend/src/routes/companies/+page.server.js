@@ -1,38 +1,54 @@
+import axios from "axios";
+import { error } from "@sveltejs/kit";
+// Load environment variables from .env file for local development
 import 'dotenv/config';
+const API_BASE_URL = process.env.API_BASE_URL; // defined in frontend/.env
 
-const API_BASE_URL = process.env.API_BASE_URL;
-
-export async function load({ fetch }) {
-  const res = await fetch(`${API_BASE_URL}/api/company`);
-  if (!res.ok) {
-    return { companies: [], loadError: `Konnte Firmen nicht laden (${res.status})` };
+export async function load({ locals }) {
+  const jwt_token = locals.jwt_token; 
+    if(!jwt_token) {
+    return {
+      companies: []
+    };
   }
-  const companies = await res.json();
-  return { companies };
-}
-
-export const actions = {
-  create: async ({ request, fetch }) => {
-    const form = await request.formData();
-    const name = form.get('name')?.trim();
-    const email = form.get('email')?.trim();
-
-    if (!name || !email) {
-      return { success: false, error: 'Bitte Name und Email ausfüllen.' };
-    }
-
-    const resp = await fetch(`${API_BASE_URL}/api/company`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email })
+  try {
+    const response = await axios({
+      method: "get",
+      url: `${API_BASE_URL}/api/company`,
+      headers: { Authorization: "Bearer " + jwt_token },
     });
-
-    if (!resp.ok) {
-      const text = await resp.text();
-      return { success: false, error: `Anlegen fehlgeschlagen (${resp.status}): ${text}` };
-    }
-
-    const created = await resp.json();
-    return { success: true, created };
-  }
-};
+    return {
+      companies: response.data
+    };
+  } catch (axiosError) {
+    console.log('Error loading companies:', axiosError);
+  } 
+}
+export const actions = {
+  createCompany: async ({ request, locals }) => {
+    const jwt_token = locals.jwt_token; 
+      if(!jwt_token) {
+      throw error(401, 'Authentication required');
+    } 
+    const data = await request.formData();
+    const company = {
+      name: data.get('name'),
+      email: data.get('email')
+    };
+    try {
+      await axios({
+        method: "post",
+        url: `${API_BASE_URL}/api/company`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + jwt_token,
+        },
+        data: company,
+      });
+      return { success: true };
+    } catch (error) {
+      console.log('Error creating company:', error);
+      return { success: false, error: 'Could not create company' };
+    } 
+}
+}; 

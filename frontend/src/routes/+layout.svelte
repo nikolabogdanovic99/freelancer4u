@@ -8,6 +8,7 @@
 <svelte:head>
   <link rel="icon" href={favicon} />
 </svelte:head>
+
 <nav class="navbar navbar-expand-lg bg-light">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">Freelancer4U</a>
@@ -26,17 +27,18 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {#if isAuthenticated}
           <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="/companies"
-              >Companies</a
-            >
+            <a class="nav-link" href="/companies">Companies</a>
           </li>
-        {/if}
-        {#if isAuthenticated}
           <li class="nav-item">
             <a class="nav-link" href="/jobs">Jobs</a>
           </li>
+          <!-- 👉 Neuer Eintrag für Account -->
+          <li class="nav-item">
+            <a class="nav-link" href="/account">Account</a>
+          </li>
         {/if}
       </ul>
+
       <div class="d-flex">
         {#if isAuthenticated}
           <span class="navbar-text me-2">{user.name}</span>
@@ -51,6 +53,7 @@
     </div>
   </div>
 </nav>
+
 <div class="container mt-3">
   {@render children()}
 </div>

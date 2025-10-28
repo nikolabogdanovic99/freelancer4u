@@ -1,84 +1,68 @@
 <script>
-  import { enhance } from '$app/forms';
-  import { invalidateAll } from '$app/navigation';
+  import { enhance } from "$app/forms";
+  import axios from "axios";
 
-  export let data; 
+  let { data, form } = $props();
+  let companies = $state(data.companies);
 
-  let message = '';
-
-  const onEnhance = (opts) =>
-    enhance(opts.form, async ({ result }) => {
-      if (result.type === 'success') {
-        const r = await result.json();
-        if (r.success) {
-          message = 'Firma wurde erstellt ✅';
-          await invalidateAll();
-          opts.form.reset();
-        } else {
-          message = r.error || 'Erstellen fehlgeschlagen.';
-        }
-      } else if (result.type === 'failure') {
-        message = 'Erstellen fehlgeschlagen.';
-      }
-    });
+  // Update companies list when data changes (after successful form submission)
+  $effect(() => {
+    companies = data.companies;
+  });
 </script>
 
-<svelte:head>
-  <title>Companies • Freelancer4U</title>
-</svelte:head>
+<h1 class="mt-3">Create Company</h1>
 
-<div class="container" style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
-  <h1 style="margin-bottom: 1rem;">Companies</h1>
-
-  {#if data.loadError}
-    <div style="margin-bottom: 1rem; padding: .75rem; border: 1px solid #f5a; background: #ffe6ee;">
-      {data.loadError}
-    </div>
-  {/if}
-
-  <div style="overflow-x: auto; margin-bottom: 2rem;">
-    <table border="1" cellpadding="8" cellspacing="0" width="100%">
-      <thead>
-        <tr>
-          <th align="left">ID</th>
-          <th align="left">Name</th>
-          <th align="left">Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#if data.companies && data.companies.length > 0}
-          {#each data.companies as c}
-            <tr>
-              <td>{c.id}</td>
-              <td>{c.name}</td>
-              <td>{c.email}</td>
-            </tr>
-          {/each}
-        {:else}
-          <tr>
-            <td colspan="3" align="center">Keine Companies gefunden.</td>
-          </tr>
-        {/if}
-      </tbody>
-    </table>
+{#if form?.success}
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Company created successfully!
   </div>
+{/if}
 
-  <h2 style="margin-bottom: .5rem;">Create Company</h2>
-  <form method="POST" action="?/create" use:onEnhance>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-      <div>
-        <label for="name">Name</label><br />
-        <input id="name" name="name" type="text" required style="width: 100%; padding: .5rem;" />
-      </div>
-      <div>
-        <label for="email">Email</label><br />
-        <input id="email" name="email" type="email" required style="width: 100%; padding: .5rem;" />
-      </div>
+{#if form?.error}
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {form.error}
+  </div>
+{/if}
+
+<form class="mb-5" method="POST" action="?/createCompany" use:enhance>
+  <div class="row mb-3">
+    <div class="col">
+      <label class="form-label" for="name">Name</label>
+      <input class="form-control" id="name" name="name" type="text" required />
     </div>
-    <button type="submit" style="padding: .5rem 1rem; cursor: pointer;">Create</button>
-  </form>
+  </div>
+  <div class="row mb-3">
+    <div class="col">
+      <label class="form-label" for="email">E-Mail</label>
+      <input
+        class="form-control"
+        id="email"
+        name="email"
+        type="email"
+        required
+      />
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary"> Submit </button>
+</form>
 
-  {#if message}
-    <p style="margin-top: 1rem;">{message}</p>
-  {/if}
-</div>
+<h1>All Companies</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">E-Mail</th>
+      <th scope="col">ID</th>
+    </tr>
+  </thead>
+  <tbody>
+    {#each companies as company}
+      <tr>
+        <td>{company.name}</td>
+        <td>{company.email}</td>
+        <td>{company.id}</td>
+      </tr>
+    {/each}
+  </tbody>
+</table>
