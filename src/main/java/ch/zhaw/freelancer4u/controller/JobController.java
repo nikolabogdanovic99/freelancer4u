@@ -40,11 +40,11 @@ public class JobController {
         }
 
         Job jDAO = new Job(
+                cDTO.getTitle(),
                 cDTO.getDescription(),
-                cDTO.getJobType(),
+                cDTO.getJobType(), // bleibt String
                 cDTO.getEarnings(),
-                cDTO.getCompanyId()
-        );
+                cDTO.getCompanyId());
         Job j = jobRepository.save(jDAO);
         return new ResponseEntity<>(j, HttpStatus.CREATED);
     }
@@ -52,8 +52,7 @@ public class JobController {
     @GetMapping("/job")
     public ResponseEntity<List<Job>> getAllJobs(
             @RequestParam(required = false) Double min,
-            @RequestParam(required = false) String type
-    ) {
+            @RequestParam(required = false) String type) {
         List<Job> jobs;
         if (min != null && type != null) {
             jobs = jobRepository.findByEarningsGreaterThanAndJobType(min, type);
@@ -71,6 +70,6 @@ public class JobController {
     public ResponseEntity<Job> getJobById(@PathVariable String id) {
         Optional<Job> result = jobRepository.findById(id);
         return result.map(job -> new ResponseEntity<>(job, HttpStatus.OK))
-                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }
