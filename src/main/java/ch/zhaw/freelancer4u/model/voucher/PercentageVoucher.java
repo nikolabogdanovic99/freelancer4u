@@ -1,28 +1,29 @@
 package ch.zhaw.freelancer4u.model.voucher;
 
 import java.util.List;
+
 import ch.zhaw.freelancer4u.model.Job;
 
+public class PercentageVoucher implements Voucher {
 
-public class PercentageVoucher {
+    private int discount = 0;
+    static String errorMessageGreaterZero = "Error: Discount value must be greater zero.";
+    static String errorMessage50 = "Error: Discount value must less or equal 50.";
 
-    private final double percentage; 
-
-    public PercentageVoucher(double percentage) {
-        if (percentage < 0 || percentage > 100) {
-            throw new IllegalArgumentException("percentage must be between 0 and 100");
+    public PercentageVoucher(int discount) {
+        if (discount <= 0) {
+            throw new RuntimeException(errorMessageGreaterZero);
         }
-        this.percentage = percentage;
+        if (discount > 50) {
+            throw new RuntimeException(errorMessage50);
+        }
+        this.discount = discount;
     }
 
-    public double getPercentage() {
-        return percentage;
-    }
-
+    @Override
     public double getDiscount(List<Job> jobs) {
-        double sum = jobs.stream()
-                         .mapToDouble(Job::getEarnings)
-                         .sum();
-        return sum * (percentage / 100.0);
+        var totalPrice = jobs.stream().mapToDouble(p -> p.getEarnings()).sum();
+        return totalPrice * ((double) discount / 100);
     }
+
 }
