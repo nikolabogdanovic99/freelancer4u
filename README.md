@@ -1,4 +1,11 @@
-# Freelancer4u 
+# Freelancer4u
+
+## Build & Test Status
+
+![Build and Test](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://raw.githubusercontent.com/nikolabogdanovic99/freelancer4u/main/.github/badges/jacoco.svg)
+![Branches](https://raw.githubusercontent.com/nikolabogdanovic99/freelancer4u/main/.github/badges/branches.svg)
+
 Freelancer4u ist ein vereinfachtes Job-Portal für Freelancer aus dem Bereich 
 Softwareentwicklung. 
 Es werden zwei Rollen unterschieden: 
