@@ -19,7 +19,7 @@ RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 RUN ./mvnw package -DskipTests 
  
 # Use supervisor to start frontend and backend 
-RUN cat > /etc/supervisor/conf.d/supervisord.conf <<'EOF' 
+RUN cat > /etc/supervisor/conf.d/supervisord.conf <<'EOF'
 [supervisord] 
 nodaemon=true 
 user=root 
@@ -43,7 +43,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0 
 stderr_logfile=/dev/stderr 
 stderr_logfile_maxbytes=0 
-EOF 
+EOF
  
 EXPOSE 3000 
  
