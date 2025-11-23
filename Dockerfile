@@ -1,4 +1,4 @@
-FROM openjdk:23-jdk-slim
+FROM openjdk:21-jdk-slim
  
 RUN apt-get update && apt-get install -y supervisor curl \ 
   && curl -sL https://deb.nodesource.com/setup_22.x | bash - \ 
