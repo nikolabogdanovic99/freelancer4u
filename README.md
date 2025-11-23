@@ -2,7 +2,7 @@
 
 ## Build & Test Status
 
-![Build and Test](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci-badge.yml/badge.svg)
+![Build and Test](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://raw.githubusercontent.com/nikolabogdanovic99/freelancer4u/main/.github/badges/jacoco.svg)
 ![Branches](https://raw.githubusercontent.com/nikolabogdanovic99/freelancer4u/main/.github/badges/branches.svg)
 
