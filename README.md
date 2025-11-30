@@ -1,4 +1,4 @@
-![Workflow](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci-badge.yml/badge.svg)
+![Workflow](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://github.com/nikolabogdanovic99/freelancer4u/blob/main/.github/badges/jacoco.svg)
 ![Branches](https://github.com/nikolabogdanovic99/freelancer4u/blob/main/.github/badges/branches.svg)
 
