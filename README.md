@@ -1,10 +1,11 @@
-# ShareWay
+![Workflow](https://github.com/nikolabogdanovic99/freelancer4u/actions/workflows/ci-badge.yml/badge.svg)
+![Coverage](https://github.com/nikolabogdanovic99/freelancer4u/blob/main/.github/badges/jacoco.svg)
+![Branches](https://github.com/nikolabogdanovic99/freelancer4u/blob/main/.github/badges/branches.svg)
 
-ShareWay ist eine vereinfachte Mitfahr-App, bei der Fahrer Fahrten erstellen und Passagiere verfügbare Fahrten suchen und Mitfahranfragen stellen können.  
-Es werden drei Rollen unterschieden:
+# Freelancer4u
+Freelancer4u ist ein vereinfachtes Job-Portal für Freelancer aus dem Bereich Softwareentwicklung.
+Es werden zwei Rollen unterschieden:
+- **Admin**: Kann Companies und Jobs verwalten.
+- **User**: Kann Jobs suchen, übernehmen und abschliessen.
 
-- **Driver**: Kann Fahrten erstellen, Anfragen bestätigen oder ablehnen.  
-- **Passenger**: Kann Fahrten suchen und Mitfahranfragen stellen.  
-- **Admin**: Kann das System überwachen (optional).
-
-![Use Case Diagram](doc/use-case-shareway.drawio.svg)
+![Use Case Diagramm](doc/uc-diagram.drawio.svg)
