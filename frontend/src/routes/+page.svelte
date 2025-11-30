@@ -3,7 +3,6 @@
     let { isAuthenticated } = data;
 </script>
 
-
 {#if isAuthenticated}
     <h1>Welcome to Freelancer4U!</h1>
     <!-- Beispiel für die Verwendung von Bildern im Ordner 'static/images' -->
@@ -17,6 +16,8 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Get Started</h5>
                         <p class="card-text">
+                            Please log in to access your account or sign up to
+                            create a new one.
                         </p>
                         <a href="/login" class="btn btn-primary me-2">Login</a>
                         <a href="/signup" class="btn btn-outline-primary"

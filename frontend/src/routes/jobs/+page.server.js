@@ -17,17 +17,17 @@ export async function load({ url, locals }) {
     }
 
     try {
-         // Get URL parameters for pagination 
-        const currentPage = parseInt(url.searchParams.get('pageNumber') || '1'); 
-        const pageSize = parseInt(url.searchParams.get('pageSize') || '5'); 
-         
-        // Build query string 
+        // Get URL parameters for pagination
+        const currentPage = parseInt(url.searchParams.get('pageNumber') || '1');
+        const pageSize = parseInt(url.searchParams.get('pageSize') || '5');
+
+        // Build query string
         let query = `?pageSize=${pageSize}&pageNumber=${currentPage}`;
 
         // Could be done in parallel with Promise.all(...)
         const jobsResponse = await axios({
             method: "get",
-            url: `${API_BASE_URL}/api/job` + query, 
+            url: `${API_BASE_URL}/api/job` + query,
             headers: { Authorization: "Bearer " + jwt_token },
         })
 
@@ -42,10 +42,10 @@ export async function load({ url, locals }) {
             companiesResponse = { data: [] };
         }
 
-return { 
-          jobs: jobsResponse.data.content, 
-            companies: companiesResponse.data, 
-            nrOfPages: jobsResponse.data.totalPages || 0, 
+        return {
+            jobs: jobsResponse.data.content,
+            companies: companiesResponse.data.content,
+            nrOfPages: jobsResponse.data.totalPages || 0,
             currentPage: currentPage,
         };
 
@@ -89,26 +89,26 @@ export const actions = {
             return { success: false, error: 'Could not create job' };
         }
     },
-        assignToMe: async ({ request, url, locals }) => { 
-        const jwt_token = locals.jwt_token; 
- 
-        if (!jwt_token) { 
-            throw error(401, 'Authentication required'); 
-        } 
- 
-        const data = await request.formData(); 
-        const jobId = data.get('jobId'); 
- 
-        try { 
-            await axios({ 
-                method: "put", 
-                url: `${API_BASE_URL}/api/service/me/assignjob?jobId=${jobId}`, 
-                headers: { Authorization: "Bearer " + jwt_token }, 
-            }); 
-        } catch (error) { 
-            console.log('Error assigning job:', error); 
-        } 
-    }, 
+    assignToMe: async ({ request, url, locals }) => {
+        const jwt_token = locals.jwt_token;
+
+        if (!jwt_token) {
+            throw error(401, 'Authentication required');
+        }
+
+        const data = await request.formData();
+        const jobId = data.get('jobId');
+
+        try {
+            await axios({
+                method: "put",
+                url: `${API_BASE_URL}/api/service/me/assignjob?jobId=${jobId}`,
+                headers: { Authorization: "Bearer " + jwt_token },
+            });
+        } catch (error) {
+            console.log('Error assigning job:', error);
+        }
+    },
     completeMyJob: async ({ request, locals }) => {
         const jwt_token = locals.jwt_token;
 
@@ -123,15 +123,10 @@ export const actions = {
             await axios({
                 method: "put",
                 url: `${API_BASE_URL}/api/service/me/completejob?jobId=${jobId}`,
-                headers: {
-                    Authorization: "Bearer " + jwt_token,
-                }
+                headers: { Authorization: "Bearer " + jwt_token },
             });
-
-            return { success: true };
         } catch (error) {
             console.log('Error completing job:', error);
-            return { success: false, error: 'Could not complete job' };
         }
     }
-};
+}

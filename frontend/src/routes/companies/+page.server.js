@@ -1,27 +1,26 @@
 import axios from "axios";
 import { error } from "@sveltejs/kit";
+// Load environment variables from .env file for local development
 import 'dotenv/config';
-
-const API_BASE_URL = process.env.API_BASE_URL;
+const API_BASE_URL = process.env.API_BASE_URL; // defined in frontend/.env
 
 export async function load({ url, locals }) {
+
     const jwt_token = locals.jwt_token;
 
     if (!jwt_token) {
         return {
-            companies: [],
-            currentPage: 1,
-            nrOfPages: 0
+            companies: []
         };
     }
 
     try {
-        // Pagination-Parameter aus der URL lesen
+        // Get URL parameters for pagination
         const currentPage = parseInt(url.searchParams.get('pageNumber') || '1');
         const pageSize = parseInt(url.searchParams.get('pageSize') || '5');
 
-        const query = `?pageNumber=${currentPage}&pageSize=${pageSize}`;
-
+        // Build query string
+        let query = `?pageSize=${pageSize}&pageNumber=${currentPage}`;
         const response = await axios({
             method: "get",
             url: `${API_BASE_URL}/api/company` + query,
@@ -29,18 +28,14 @@ export async function load({ url, locals }) {
         });
 
         return {
-            companies: response.data.content,    // wie bei jobs
-            currentPage,
-            nrOfPages: response.data.totalPages || 0
+            companies: response.data.content,
+            nrOfPages: response.data.totalPages || 0,
+            currentPage: currentPage,
+            pageSize: pageSize
         };
 
     } catch (axiosError) {
         console.log('Error loading companies:', axiosError);
-        return {
-            companies: [],
-            currentPage: 1,
-            nrOfPages: 0
-        };
     }
 }
 

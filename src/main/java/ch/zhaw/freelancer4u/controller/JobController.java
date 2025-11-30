@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +21,8 @@ import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.service.CompanyService;
 import ch.zhaw.freelancer4u.service.UserService;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
 
 @RestController
 @RequestMapping("/api")
@@ -36,6 +37,9 @@ public class JobController {
     @Autowired
     UserService userService;
 
+    @Autowired
+    OpenAiChatModel chatModel;
+
     @PostMapping("/job")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO cDTO) {
         if (!userService.userHasRole("admin")) {
@@ -45,12 +49,12 @@ public class JobController {
         if (!companyService.companyExists(cDTO.getCompanyId())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        Job job = new Job(
-                cDTO.getTitle(),
-                cDTO.getDescription(),
-                JobType.valueOf(cDTO.getJobType().toUpperCase()),
-                cDTO.getEarnings(),
-                cDTO.getCompanyId());
+        var generatedTitle = chatModel.call(new Prompt(
+                "Der Titel lautet bisher: '" + cDTO.getTitle()
+                        + "'. Falls nötig, verbessere den Titel anhand der folgenden Beschreibung: "
+                        + cDTO.getDescription() + ". Gib nur den neuen Titel zurück."));
+        var title = generatedTitle.getResult().getOutput().getText();
+        Job job = new Job(title, cDTO.getDescription(), cDTO.getJobType(), cDTO.getEarnings(), cDTO.getCompanyId());
         Job j = jobRepository.save(job);
         return new ResponseEntity<>(j, HttpStatus.CREATED);
     }
@@ -61,7 +65,9 @@ public class JobController {
             @RequestParam(required = false) JobType type,
             @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
+
         Page<Job> allJobs;
+
         if (min == null && type == null) {
             allJobs = jobRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
         } else {
@@ -88,7 +94,7 @@ public class JobController {
         return new ResponseEntity<>(job.get(), HttpStatus.OK);
     }
 
-    @org.springframework.web.bind.annotation.DeleteMapping("/job/{id}")
+    @DeleteMapping("/job/{id}")
     public ResponseEntity<String> deleteJobById(@PathVariable String id) {
         if (!userService.userHasRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -96,5 +102,4 @@ public class JobController {
         jobRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body("DELETED");
     }
-
 }

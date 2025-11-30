@@ -4,9 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -19,88 +18,129 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.zhaw.freelancer4u.model.Job;
+import ch.zhaw.freelancer4u.model.JobType;
 import ch.zhaw.freelancer4u.repository.CompanyRepository;
+import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.security.TestSecurityConfig;
 
+import org.junit.jupiter.api.BeforeEach;
+
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
+
+// neues MockitoBean aus Spring Framework
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+// Mockito
+import org.mockito.Answers;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+
+
 @SpringBootTest
-@AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
+@AutoConfigureMockMvc
 @TestMethodOrder(OrderAnnotation.class)
 public class JobControllerTest {
+
+    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+    private OpenAiChatModel chatModel;
+
+    @BeforeEach
+    void setupMockAiResponse() {
+        when(chatModel.call(any(Prompt.class))
+                .getResult()
+                .getOutput()
+                .getText()).thenReturn(TEST_TITLE);
+    }
 
     @Autowired
     private MockMvc mvc;
 
     @Autowired
-    private CompanyRepository companyRepository;
+    CompanyRepository companyRepository;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static String createdJobId;
-    private static String usedCompanyId;
+    @Autowired
+    JobRepository jobRepository;
 
-    private String getCompanyId() {
-        return companyRepository.findAll().get(0).getId();
-    }
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final String TEST_TITLE = "TEST-TITLE-abc...xyz";
+    private static final String TEST_DESCRIPTION = "TEST-abc...xyz";
+    private static String company_id = "";
+    private static String job_id = "";
 
     @Test
-    @Order(1)
-    void createJob() throws Exception {
-        usedCompanyId = getCompanyId();
+    @Order(10)
+    public void testCreateJob() throws Exception {
+        // get valid company id
+        company_id = getCompanyId();
+        System.out.println("using company id " + company_id);
 
-        String jsonBody = String.format(
-            "{\"title\":\"Test Job\",\"description\":\"Desc\",\"jobType\":\"IMPLEMENT\",\"earnings\":123.0,\"companyId\":\"%s\"}",
-            usedCompanyId
-        );
+        // create a test job and convert to Json
+        Job job = new Job();
+        job.setTitle(TEST_TITLE);
+        job.setDescription(TEST_DESCRIPTION);
+        job.setJobType(JobType.TEST);
+        job.setEarnings(3.1415);
+        job.setCompanyId(company_id);
+        String jsonBody = objectMapper.writeValueAsString(job);
 
-        MvcResult result = mvc.perform(post("/api/job")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN)
-            .content(jsonBody))
-            .andDo(print())
-            .andExpect(status().isCreated())
-            .andReturn();
+        // POST Json to service with authorization header
+        var result = mvc.perform(post("/api/job")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andReturn();
 
         String jsonResponse = result.getResponse().getContentAsString();
-        JsonNode node = objectMapper.readTree(jsonResponse);
-        createdJobId = node.get("id").asText();
-        assertNotNull(createdJobId);
+        JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+        job_id = jsonNode.get("id").asText();
+        System.out.println("created job with id " + job_id);
     }
 
     @Test
-    @Order(2)
-    void getJobById_shouldReturnCreatedJob() throws Exception {
-        mvc.perform(get("/api/job/" + createdJobId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.title").value("Test Job"))
-            .andExpect(jsonPath("$.description").value("Desc"))
-            .andExpect(jsonPath("$.companyId").value(usedCompanyId));
+    @Order(20)
+    public void testGetJob() throws Exception {
+        mvc.perform(get("/api/job/" + job_id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value(TEST_TITLE))
+                .andExpect(jsonPath("$.description").value(TEST_DESCRIPTION))
+                .andExpect(jsonPath("$.companyId").value(company_id));
     }
 
     @Test
-    @Order(3)
-    void deleteJobById_shouldReturnOk() throws Exception {
-        mvc.perform(delete("/api/job/" + createdJobId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
-            .andDo(print())
-            .andExpect(status().isOk());
+    @Order(30)
+    public void testDeleteJobById() throws Exception {
+        mvc.perform(delete("/api/job/" + job_id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 
     @Test
-    @Order(4)
-    void getJobById_afterDeletion_shouldReturnNotFound() throws Exception {
-        mvc.perform(get("/api/job/" + createdJobId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
-            .andDo(print())
-            .andExpect(status().isNotFound());
+    @Order(40)
+    public void testGetDeletedJob() throws Exception {
+        mvc.perform(get("/api/job/" + job_id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    private String getCompanyId() {
+        // get valid company id
+        return companyRepository.findAll().get(0).getId();
     }
 }

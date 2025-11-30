@@ -13,8 +13,7 @@ public class PercentageVoucher implements Voucher {
     public PercentageVoucher(int discount) {
         if (discount <= 0) {
             throw new RuntimeException(errorMessageGreaterZero);
-        }
-        if (discount > 50) {
+        } else if (discount > 50) {
             throw new RuntimeException(errorMessage50);
         }
         this.discount = discount;

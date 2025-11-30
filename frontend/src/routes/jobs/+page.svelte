@@ -121,44 +121,42 @@
         <td>{job.companyId}</td>
         <td>{job.freelancerId}</td>
         <td>
-          {#if job.jobState === "DONE"}
-            <!-- DONE → Badge -->
-            <span class="badge text-bg-success">Done</span>
-          {:else if job.jobState === "ASSIGNED" && job.freelancerId === user.email}
-            <!-- ASSIGNED + gehört mir → Complete-Button -->
-            <form
-              method="POST"
-              action="?/completeMyJob"
-              use:enhance
-              class="d-inline"
-            >
-              <input type="hidden" name="jobId" value={job.id} />
-              <button type="submit" class="btn btn-sm btn-success">
-                Complete Job
-              </button>
-            </form>
-          {:else if job.freelancerId === null && job.jobState === "NEW"}
-            <!-- Noch niemand assigned → Assign-to-me-Button -->
+          {#if job.jobState === "ASSIGNED"}
+            <span class="badge bg-secondary">Assigned</span>
+          {:else if job.freelancerId === null}
             <form
               method="POST"
               action="?/assignToMe"
               use:enhance
-              class="d-inline"
+              style="display: inline;"
             >
               <input type="hidden" name="jobId" value={job.id} />
-              <button type="submit" class="btn btn-sm btn-primary">
+              <button type="submit" class="btn btn-primary btn-sm">
                 Assign to me
               </button>
             </form>
-          {:else if job.jobState === "ASSIGNED"}
-            <!-- ASSIGNED, aber gehört jemand anderem -->
-            <span class="badge text-bg-warning">Assigned</span>
+          {/if}
+          {#if job.jobState === "DONE"}
+            <span class="badge bg-secondary">Done</span>
+          {:else if job.jobState === "ASSIGNED" && job.freelancerId === user.email}
+            <form
+              method="POST"
+              action="?/completeMyJob"
+              use:enhance
+              style="display: inline;"
+            >
+              <input type="hidden" name="jobId" value={job.id} />
+              <button type="submit" class="btn btn-primary btn-sm">
+                Complete Job
+              </button>
+            </form>
           {/if}
         </td>
       </tr>
     {/each}
   </tbody>
 </table>
+
 <nav>
   <ul class="pagination">
     {#each Array(nrOfPages) as _, i}
