@@ -25,5 +25,4 @@ public class CompanyService {
         Company company = new Company(name, email);
         companyRepository.save(company);
     }
-
 }

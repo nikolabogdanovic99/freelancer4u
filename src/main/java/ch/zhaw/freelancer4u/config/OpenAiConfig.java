@@ -1,6 +1,9 @@
 package ch.zhaw.freelancer4u.config;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,11 +13,11 @@ import org.springframework.context.annotation.Configuration;
 public class OpenAiConfig {
 
     @Autowired
-    private OpenAiChatModel chatModel;
+    OpenAiChatModel chatModel;
 
     @Bean
     public ChatClient chatClient() {
-        // einfacher ChatClient ohne Advisors
-        return ChatClient.builder(chatModel).build();
+        MessageChatMemoryAdvisor chatMemoryAdvisor = MessageChatMemoryAdvisor.builder(MessageWindowChatMemory.builder().build()).build();
+        return ChatClient.builder(chatModel).defaultAdvisors(chatMemoryAdvisor, new SimpleLoggerAdvisor()).build();
     }
 }

@@ -1,50 +1,52 @@
 package ch.zhaw.freelancer4u.controller;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import ch.zhaw.freelancer4u.repository.JobRepository;
+import ch.zhaw.freelancer4u.service.CompanyService;
+import ch.zhaw.freelancer4u.service.UserService;
 import ch.zhaw.freelancer4u.tools.FreelancerTools;
 
 @RestController
 @RequestMapping("/api")
 public class ChatController {
-
-    private final ChatClient chatClient;
-    private final FreelancerTools freelancerTools;
+    @Autowired
+    JobRepository jobRepository;
 
     @Autowired
-    public ChatController(ChatClient chatClient, FreelancerTools freelancerTools) {
-        this.chatClient = chatClient;
-        this.freelancerTools = freelancerTools;
-    }
+    CompanyService companyService;
 
-    public record ChatRequest(String message) {}
-    public record ChatResponseDto(String reply) {}
+    @Autowired
+    UserService userService;
 
-    @PostMapping("/chat")
-    public ResponseEntity<ChatResponseDto> chat(@RequestBody ChatRequest request) {
+    @Autowired
+    OpenAiChatModel chatModel;
 
-        if (request == null || request.message() == null || request.message().isBlank()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    @Autowired
+    ChatClient chatClient;
+
+    ChatMemory chatMemory;
+
+    @GetMapping("/chat")
+    public ResponseEntity<String> chat(@RequestParam(required = true) String message) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-
-        String systemPrompt = """
-                Du bist ein hilfreicher Chatbot für die Plattform Freelancer4u.
-                Du kennst die Datenbank mit Jobs und Companies und kannst mit Tools
-                (FreelancerTools) neue Companies und Jobs anlegen.
-                Antworte immer auf Deutsch, kurz und verständlich.
-                """;
-
-        String answer = chatClient
-                .prompt(systemPrompt)
-                .tools(freelancerTools)
-                .user(request.message())
+        String content = chatClient.prompt(
+                "Du bist ein Chatbot. Der den Benutzer Fragen beantwortet über Bestehende Jobs, deren Preis, Beschreibung, Titel und Unternehmen.")
+                .tools(new FreelancerTools(jobRepository, companyService)).user(message)
                 .call()
                 .content();
 
-        return ResponseEntity.ok(new ChatResponseDto(answer));
+        return ResponseEntity.status(HttpStatus.OK).body(content);
     }
 }

@@ -1,5 +1,7 @@
 package ch.zhaw.freelancer4u.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,16 +9,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.mockito.Answers;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,36 +35,11 @@ import ch.zhaw.freelancer4u.repository.CompanyRepository;
 import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.security.TestSecurityConfig;
 
-import org.junit.jupiter.api.BeforeEach;
-
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.chat.prompt.Prompt;
-
-// neues MockitoBean aus Spring Framework
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-// Mockito
-import org.mockito.Answers;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.any;
-
-
 @SpringBootTest
 @Import(TestSecurityConfig.class)
 @AutoConfigureMockMvc
 @TestMethodOrder(OrderAnnotation.class)
 public class JobControllerTest {
-
-    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
-    private OpenAiChatModel chatModel;
-
-    @BeforeEach
-    void setupMockAiResponse() {
-        when(chatModel.call(any(Prompt.class))
-                .getResult()
-                .getOutput()
-                .getText()).thenReturn(TEST_TITLE);
-    }
 
     @Autowired
     private MockMvc mvc;
@@ -68,12 +50,23 @@ public class JobControllerTest {
     @Autowired
     JobRepository jobRepository;
 
+    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+    private OpenAiChatModel chatModel;
+
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String TEST_TITLE = "TEST-TITLE-abc...xyz";
     private static final String TEST_DESCRIPTION = "TEST-abc...xyz";
     private static String company_id = "";
     private static String job_id = "";
+
+    @BeforeEach
+    void setupMockAiResponse() {
+        when(chatModel.call(any(Prompt.class))
+            .getResult()
+            .getOutput()
+            .getText()).thenReturn(TEST_TITLE);
+    }
 
     @Test
     @Order(10)

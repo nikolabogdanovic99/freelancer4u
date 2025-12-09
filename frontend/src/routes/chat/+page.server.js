@@ -1,58 +1,32 @@
-/** @type {import('./$types').Actions} */
-export const actions = {
-  default: async ({ request, fetch }) => {
-    const formData = await request.formData();
-    const message = (formData.get('message') || '').toString().trim();
+import axios from "axios";
+import { error } from "@sveltejs/kit";
+// Load environment variables from .env file for local development
+import 'dotenv/config';
+const API_BASE_URL = process.env.API_BASE_URL; // defined in frontend/.env
 
-    if (!message) {
-      return {
-        success: false,
-        error: 'Bitte gib eine Nachricht ein.'
-      };
-    }
+export const actions = {
+  chat: async ({ request, locals }) => {
+
+    const jwt_token = locals.jwt_token;
+    if (!jwt_token){ throw error(401, "Authentication required") };
+
+    const data = await request.formData();
+    const message = data.get("message");
 
     try {
-      const res = await fetch('http://localhost:8080/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message })
-      });
+      const res = await axios.get(
+        `${API_BASE_URL}/api/chat?message=${encodeURIComponent(message)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt_token}`
+          }
+        }
+      );
 
-      const text = await res.text();
-
-      if (!res.ok) {
-        return {
-          success: false,
-          error: `Fehler vom Backend (Status ${res.status}): ${text || 'kein Text'}`
-        };
-      }
-
-      let data;
-      try {
-        data = JSON.parse(text); // { reply: "..." }
-      } catch {
-        return {
-          success: false,
-          error: `Antwort vom Backend war kein gültiges JSON: ${text}`
-        };
-      }
-
-      return {
-        success: true,
-        question: message,
-        answer: data.reply
-      };
-    } catch (e) {
-      return {
-        success: false,
-        error: 'Fehler beim Aufruf von /api/chat: ' + String(e)
-      };
+      return { reply: res.data };  // <-- sent back to client enhance()
+    } catch (err) {
+      console.error("Chat backend error:", err);
+      return { reply: "Error occurred while contacting the server." };
     }
   }
 };
-
-export async function load() {
-  return {};
-}

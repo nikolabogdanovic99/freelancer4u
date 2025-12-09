@@ -15,7 +15,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import ch.zhaw.freelancer4u.model.Job;
 import ch.zhaw.freelancer4u.model.JobType;
 
-
 public class PercentageVoucherTest {
 
     @Test

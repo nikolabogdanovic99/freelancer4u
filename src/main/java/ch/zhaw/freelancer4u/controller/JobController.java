@@ -1,5 +1,7 @@
 package ch.zhaw.freelancer4u.controller;
 
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,9 +22,6 @@ import ch.zhaw.freelancer4u.model.JobType;
 import ch.zhaw.freelancer4u.repository.JobRepository;
 import ch.zhaw.freelancer4u.service.CompanyService;
 import ch.zhaw.freelancer4u.service.UserService;
-
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.chat.prompt.Prompt;
 
 @RestController
 @RequestMapping("/api")
@@ -50,9 +49,8 @@ public class JobController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         var generatedTitle = chatModel.call(new Prompt(
-                "Der Titel lautet bisher: '" + cDTO.getTitle()
-                        + "'. Falls nötig, verbessere den Titel anhand der folgenden Beschreibung: "
-                        + cDTO.getDescription() + ". Gib nur den neuen Titel zurück."));
+            "Der Titel lautet bisher: '" + cDTO.getTitle() + "'. Falls nötig, verbessere den Titel anhand der folgenden Beschreibung: " + cDTO.getDescription() + ". Gib nur den neuen Titel zurück."
+        ));
         var title = generatedTitle.getResult().getOutput().getText();
         Job job = new Job(title, cDTO.getDescription(), cDTO.getJobType(), cDTO.getEarnings(), cDTO.getCompanyId());
         Job j = jobRepository.save(job);
