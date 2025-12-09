@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ch.zhaw.freelancer4u.model.Company;
 import ch.zhaw.freelancer4u.model.CompanyCreateDTO;
 import ch.zhaw.freelancer4u.repository.CompanyRepository;
+import ch.zhaw.freelancer4u.service.MailValidatorService;
 import ch.zhaw.freelancer4u.service.UserService;
 
 @RestController
@@ -29,6 +30,9 @@ public class CompanyController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    MailValidatorService mailValidatorService;
 
     @PostMapping("/company")
     public ResponseEntity<Company> createCompany(

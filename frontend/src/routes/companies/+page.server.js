@@ -39,35 +39,47 @@ export async function load({ url, locals }) {
     }
 }
 
-export const actions = {
-    createCompany: async ({ request, locals }) => {
+createCompany: async ({ request, locals }) => {
 
-        const jwt_token = locals.jwt_token;
+    const jwt_token = locals.jwt_token;
 
-        if (!jwt_token) {
-            throw error(401, 'Authentication required');
-        }
-
-        const data = await request.formData();
-        const company = {
-            name: data.get('name'),
-            email: data.get('email')
-        };
-
-        try {
-            await axios({
-                method: "post",
-                url: `${API_BASE_URL}/api/company`,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: "Bearer " + jwt_token,
-                },
-                data: company,
-            });
-            return { success: true };
-        } catch (error) {
-            console.log('Error creating company:', error);
-            return { success: false, error: 'Could not create company' };
-        }
+    if (!jwt_token) {
+        throw error(401, 'Authentication required');
     }
-};
+
+    const data = await request.formData();
+    const company = {
+        name: data.get('name'),
+        email: data.get('email')
+    };
+
+    try {
+
+        // Validate email first
+        const validationResponse = await axios({
+            method: "get",
+            url: `https://disify.com/api/email/${company.email}`
+        });
+
+        console.log("Validated email " + company.email);
+        console.log(validationResponse.data);
+
+        if (!validationResponse.data.format || validationResponse.data.disposable || !validationResponse.data.dns) {
+            return { success: false, error: `Email ${company.email} is not valid.` };
+        }
+
+        await axios({
+            method: "post",
+            url: `${API_BASE_URL}/api/company`,
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + jwt_token,
+            },
+            data: company,
+        });
+        return { success: true };
+    } catch (error) {
+        console.log('Error creating company:', error);
+        return { success: false, error: 'Could not create company' };
+    }
+}
